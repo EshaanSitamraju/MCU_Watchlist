@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCU Watchlist</title>
+    <style>
+        body {
+            background-color: #0a0a1a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            text-align: center;
+            margin: 0;
+            min-height: 100vh;
+            background-image: url('./idk.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+            z-index: 0;
+            animation: fadeIn 0.5s ease forwards;
+            scroll-behavior: smooth;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 10, 30, 0.7); /* Reduced opacity from 0.85 to 0.7 */
+            pointer-events: none;
+            z-index: 0;
+            backdrop-filter: blur(5px); /* Reduced blur from 8px to 5px */
+            -webkit-backdrop-filter: blur(5px);
+        }
+        /* Add to your existing styles */
+        body {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 10, 30, 0.7); /* Reduced opacity from 0.85 to 0.7 */
+            pointer-events: none;
+            z-index: 0;
+            backdrop-filter: blur(5px); /* Reduced blur from 8px to 5px */
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .watchlist {
+            position: relative;
+            z-index: 2;
+            background-color: rgba(25, 25, 50, 0.4);
+            padding: 35px;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 1200px;
+            margin: 0 auto 50px;
+            text-align: left;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: transform 0.3s ease;
+        }
+        
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #e6b800, #ff9966);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        /* Remove duplicate body::before */
+        /* Keep only one instance of body::before at the top */
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26, 60, 110, 0.4); /* Updated hover shadow color */
+            background: linear-gradient(45deg, #15325d, #254d8f); /* Slightly darker on hover */
+        }
+        .non-interactable {
+            font-weight: bold;
+            padding: 22px;
+            border-radius: 16px;
+            grid-column: 1 / -1;
+            background: linear-gradient(90deg, #1a1a3a 0%, #2a2a4a 100%);
+            text-align: center;
+            color: #e6b800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 35px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(230, 184, 0, 0.2);
+        }
+        .non-interactable::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            animation: shine 3s infinite;
+        }
+        .progress-container {
+            position: relative;
+            z-index: 2;
+            width: 85%;
+            max-width: 900px;
+            margin: 0 auto 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 25px;
+            height: 16px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #e6b800, #ff9966);
+            border-radius: 25px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(230, 184, 0, 0.4);
+        }
+        .percentile-container {
+            position: relative;
+            z-index: 2;
+            margin: 8px auto 25px; /* Increased top margin from 5px to 8px */
+            text-align: center;
+            color: #e6b800;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .progress-text {
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .percentile-container {
+            position: relative;
+            z-index: 2;
+            margin: 0 auto 30px;
+            text-align: center;
+            color: #e6b800;
+            font-size: 1.5em;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        .percentile-container {
+            position: relative;
+            z-index: 2;
+            margin: 0 auto 30px;
+            text-align: center;
+            color: #e6b800;
+            font-size: 1.5em;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        .item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px 25px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        .item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+        .item:hover::before {
+            transform: translateX(100%);
+        }
+        .item:hover {
+            transform: translateY(-3px) scale(1.02);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2),
+                        0 0 20px rgba(255, 255, 255, 0.1);
+        }
+        .title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+        .content-type-icon {
+            font-size: 1.2em;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+        .title-text {
+            font-size: 1.1em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .item:hover .title-text {
+            color: #e6b800;
+            transform: translateX(5px);
+        }
+        .item:hover .content-type-icon {
+            transform: scale(1.1);
+            opacity: 1;
+        }
+        .item:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+        input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            appearance: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        input[type="checkbox"]:checked {
+            background: linear-gradient(45deg, #00cc66, #33ff99);
+            border-color: transparent;
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .progress-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            height: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .progress-bar {
+            background: linear-gradient(90deg, #00cc66, #33ff99);
+            box-shadow: 0 0 20px rgba(0, 204, 102, 0.4);
+        }
+        h1 {
+            font-size: 3.2em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #ffffff 0%, #e6b800 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 15px rgba(230, 184, 0, 0.3);
+            letter-spacing: -0.5px;
+            filter: drop-shadow(0 0 20px rgba(230, 184, 0, 0.4));
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes titlePulse {
+            0% { filter: drop-shadow(0 0 20px rgba(230, 184, 0, 0.3)); }
+            50% { filter: drop-shadow(0 0 30px rgba(230, 184, 0, 0.6)); }
+            100% { filter: drop-shadow(0 0 20px rgba(230, 184, 0, 0.3)); }
+        }
+        .non-interactable {
+            background: linear-gradient(135deg, #1a1a3a 0%, #2a2a4a 100%);
+            padding: 25px;
+            border-radius: 20px;
+            text-align: center;
+            color: #e6b800;
+            font-size: 1.2em;
+            letter-spacing: 3px;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(230, 184, 0, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .non-interactable:hover {
+            transform: scale(1.02);
+            background: linear-gradient(135deg, #2a2a4a 0%, #3a3a5a 100%);
+            box-shadow: 0 15px 40px rgba(230, 184, 0, 0.2);
+            letter-spacing: 5px;
+        }
+        @media (max-width: 768px) {
+            .watchlist {
+                grid-template-columns: 1fr;
+                padding: 25px;
+                gap: 20px;
+            }
+            h1 {
+                font-size: 2.5em;
+                margin: 30px 0;
+            }
+            .item {
+                padding: 18px 22px;
+            }
+            .phase-header {
+                font-size: 1.6em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Remove this line -->
+    <!-- <button class="back-button" onclick="window.location.href='index.html'">← Back to Home</button> -->
+    <h1>MCU Watchlist</h1>
+    <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="percentile-container" id="percentile-container">0/0 Completed</div>
+    <div class="progress-text" id="progress-text">0% Complete</div>
+    <!-- Removed search-container div -->
+    <div class="watchlist" id="watchlist"></div>
+    <script>
+        const watchlist = [
+            { title: "Phase 1: Rise of Avengers ⚡🛡️", interactable: false },
+            { title: "Captain America: The First Avenger", interactable: true },
+            { title: "Agent Carter (One-Shot)", interactable: true },
+            { title: "Agent Carter (Season 1)", interactable: true },
+            { title: "Agent Carter (Season 2)", interactable: true },
+            { title: "Captain Marvel", interactable: true },
+            { title: "Iron Man", interactable: true },
+            { title: "Iron Man 2", interactable: true },
+            { title: "The Incredible Hulk", interactable: true },
+            { title: "The Consultant (One-Shot)", interactable: true },
+            { title: "A Funny Thing Happened on the Way to Thor's Hammer (One-Shot)", interactable: true },
+            { title: "Thor", interactable: true },
+            { title: "The Avengers", interactable: true },
+            { title: "Item 47 (One-Shot)", interactable: true },
+
+            { title: "Phase 2: Age of Avengers 🔥⚔️", interactable: false },
+            { title: "Iron Man 3", interactable: true },
+            { title: "All Hail the King (One-Shot)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 1, Ep 1–7)", interactable: true },
+            { title: "Thor: The Dark World", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 1, Ep 8–16)", interactable: true },
+            { title: "Captain America: The Winter Soldier", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 1, Ep 17–22)", interactable: true },
+            { title: "Guardians of the Galaxy", interactable: true },
+            { title: "Guardians of the Galaxy Vol. 2", interactable: true },
+            { title: "I Am Groot (Season 1)", interactable: true },
+            { title: "I Am Groot (Season 2)", interactable: true },
+            { title: "Daredevil (Season 1)", interactable: true },
+            { title: "Jessica Jones (Season 1)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 2, Ep 1–19)", interactable: true },
+            { title: "Avengers: Age of Ultron", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 2, Ep 19–22)", interactable: true },
+            { title: "Ant-Man", interactable: true },
+
+            { title: "Phase 3: Infinity Unleashed 🌀💀", interactable: false },
+            { title: "Daredevil (Season 2)", interactable: true },
+            { title: "Luke Cage (Season 1)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 3, Ep 1–19)", interactable: true },
+            { title: "Captain America: Civil War", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 3, Ep 19–22)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 4, Ep 1–8)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D.: Slingshot (Season 1)", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 4, Ep 9–22)", interactable: true },
+            { title: "Iron Fist (Season 1)", interactable: true },
+            { title: "The Defenders", interactable: true },
+            { title: "Spider-Man: Homecoming", interactable: true },
+            { title: "The Punisher (Season 1)", interactable: true },
+            { title: "Doctor Strange", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 5, Ep 1–19)", interactable: true },
+            { title: "Black Widow", interactable: true },
+            { title: "Black Panther", interactable: true },
+            { title: "Jessica Jones (Season 2)", interactable: true },
+            { title: "Inhumans (Season 1)", interactable: true },
+            { title: "Luke Cage (Season 2)", interactable: true },
+            { title: "Iron Fist (Season 2)", interactable: true },
+            { title: "Daredevil (Season 3)", interactable: true },
+            { title: "The Punisher (Season 2)", interactable: true },
+            { title: "Jessica Jones (Season 3)", interactable: true },
+            { title: "Cloak & Dagger (Season 1)", interactable: true },
+            { title: "Cloak & Dagger (Season 2)", interactable: true },
+            { title: "The Runaways (Season 3)", interactable: true },
+            { title: "Thor: Ragnarok", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 5, Ep 20–22)", interactable: true },
+            { title: "Ant-Man and the Wasp", interactable: true },
+            { title: "Avengers: Infinity War", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 6)", interactable: true },
+            { title: "Avengers: Endgame", interactable: true },
+            { title: "Agents of S.H.I.E.L.D. (Season 7)", interactable: true },
+
+            { title: "Phase 4: The Multiversal Storm 🔮🌌", interactable: false },
+            { title: "WandaVision", interactable: true },
+            { title: "Loki (Season 1)", interactable: true },
+            { title: "Loki (Season 2)", interactable: true },
+            { title: "X-Men: First Class & Days of Future Past", interactable: true },
+            { title: "X-Men Origins: Wolverine, Apocalypse, Dark Phoenix", interactable: true },
+            { title: "X-Men Trilogy (X1, X2, The Last Stand)", interactable: true },
+            { title: "The Wolverine", interactable: true },
+            { title: "Deadpool & Deadpool 2", interactable: true },
+            { title: "The New Mutants", interactable: true },
+            { title: "Logan", interactable: true },
+            { title: "Spider-Man (2002)", interactable: true },
+            { title: "Spider-Man 2", interactable: true },
+            { title: "Spider-Man 3", interactable: true },
+            { title: "Madame Web", interactable: true },
+            { title: "The Amazing Spider-Man", interactable: true },
+            { title: "The Amazing Spider-Man 2", interactable: true },
+            { title: "Venom", interactable: true },
+            { title: "Deadpool & Wolverine", interactable: true },
+            { title: "Shang-Chi and the Legend of the Ten Rings", interactable: true },
+            { title: "The Falcon and the Winter Soldier", interactable: true },
+            { title: "Spider-Man: Far From Home", interactable: true },
+            { title: "Spider-Man: No Way Home", interactable: true },
+            { title: "Venom: Let There Be Carnage", interactable: true },
+            { title: "Morbius", interactable: true },
+            { title: "Spider-Man: Into the Spider-Verse", interactable: true },
+            { title: "Spider-Man: Across the Spider-Verse", interactable: true },
+            { title: "Eternals", interactable: true },
+            { title: "Hawkeye", interactable: true },
+            { title: "Doctor Strange in the Multiverse of Madness", interactable: true },
+            { title: "Moon Knight", interactable: true },
+            { title: "Black Panther: Wakanda Forever", interactable: true },
+            { title: "Echo", interactable: true },
+            { title: "She-Hulk: Attorney at Law", interactable: true },
+            { title: "Ms. Marvel", interactable: true },
+            { title: "The Marvels", interactable: true },
+            { title: "Thor: Love and Thunder", interactable: true },
+            { title: "Werewolf by Night", interactable: true },
+            { title: "The Guardians of the Galaxy Holiday Special", interactable: true },  // Removed stray 'z'
+            { title: "Ant-Man and the Wasp: Quantumania", interactable: true },
+            { title: "Guardians of the Galaxy Vol. 3", interactable: true },
+            { title: "Secret Invasion", interactable: true },
+        ];
+    // Add this JavaScript code to make the list functional
+    const watchlistContainer = document.getElementById('watchlist');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const percentileContainer = document.getElementById('percentile-container');
+    // Get phase parameter from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentPhase = urlParams.get('phase');
+    
+    // Filter watchlist based on phase if specified
+    const displayedWatchlist = currentPhase ? watchlist.filter((item, index) => {
+        if (currentPhase === '1') {
+            return index <= 13;
+        } else if (currentPhase === '2') {
+            return index > 13 && index <= 31;
+        } else if (currentPhase === '3') {
+            return index > 31 && index <= 68;
+        } else if (currentPhase === '4') {
+            return index > 68;
+        }
+        return true;
+    }) : watchlist;
+    
+    // Load saved states from localStorage
+    const savedStates = JSON.parse(localStorage.getItem('mcuWatchlistStates')) || {};
+    // Function to update progress bar
+    function updateProgress() {
+        const interactableItems = displayedWatchlist.filter(item => item.interactable);
+        const checkedItems = [];
+        // Count only checked items properly
+        for (let index in savedStates) {
+            if (savedStates[index] === true) {
+                checkedItems.push(index);
+            }
+        }
+        const progressPercentage = interactableItems.length > 0 
+            ? Math.round((checkedItems.length / interactableItems.length) * 100) 
+            : 0;
+        
+        progressBar.style.width = `${progressPercentage}%`;
+        progressText.textContent = `${progressPercentage}% Complete`;
+        percentileContainer.textContent = `${checkedItems.length}/${interactableItems.length} Completed`;
+    }
+    // Clear existing content before adding new items
+    watchlistContainer.innerHTML = '';
+    
+    // Single forEach loop to create and append items
+    displayedWatchlist.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = item.interactable ? 'item' : 'non-interactable';
+        let titleWithEmoji = item.title;
+        
+        // Only create and append checkbox for interactable items
+        if (item.interactable) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.checked = savedStates[index] || false;
+            
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                savedStates[index] = checkbox.checked;
+                localStorage.setItem('mcuWatchlistStates', JSON.stringify(savedStates));
+                updateProgress();
+                
+                if (checkbox.checked) {
+                    div.style.backgroundColor = 'rgba(0, 204, 102, 0.2)';
+                    setTimeout(() => {
+                        div.style.backgroundColor = '';
+                    }, 500);
+                }
+            });div.appendChild(checkbox);
+        }
+        div.appendChild(document.createTextNode(titleWithEmoji));
+        div.addEventListener('click', (e) => {
+            if (e.target !== div.querySelector('input')) {
+                // Create a search query from the title
+                const searchQuery = encodeURIComponent(item.title
+                    .replace(/\([^)]*\)/g, '') // Remove content in parentheses
+                    .split(':')[0]             // Remove anything after colon
+                    .trim());                  // Remove extra spaces
+                    
+                    // Open Disney+ Hotstar with the search query
+                    const streamingUrl = `https://www.hotstar.com/in/search?q=${searchQuery}`;
+                    window.open(streamingUrl, '_blank', 'noopener,noreferrer');
+                }
+            });
+            watchlistContainer.appendChild(div);
+        });
+        // Initialize progress bar
+        updateProgress();
+        </script>
+    </body>
+    </html>
